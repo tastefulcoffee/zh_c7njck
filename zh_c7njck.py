@@ -29,10 +29,14 @@ markdown3= """
 app.layout = html.Div([
     dcc.Markdown(markdown_cim),
     dbc.Tabs([
+        html.P(),
         dbc.Tab([dcc.Markdown(markdown1)],label="Saját adatok"),
+        html.P(),
         dbc.Tab([dcc.Markdown(markdown2)],label="Projekt adatai"),
         dbc.Tab([dcc.Markdown(markdown3)],label="ETL"),
     ]),
+    html.P(),
+    
     html.Div(className='dd-1',children=[dcc.Dropdown(
         id='netto_energiamerleg_dd',
         placeholder='Válasszon egy országot',
@@ -41,7 +45,7 @@ app.layout = html.Div([
         style={'background-color':'#783758', 'color':'black'},
         )],style={'width':'700px','margin':'0 auto'}),
 
-    html.Div(className='dt-1',children=[dash_table.DataTable(
+    dash_table.DataTable(
         id='netto_energiamerleg_dt',
         data=[],
         columns=[{"name": "Year", "id": "Year"},{'name':'Net_energy_balance','id':'Net_energy_balance'}],
@@ -49,7 +53,7 @@ app.layout = html.Div([
         fixed_rows={'headers': True},
         style_table={'height': '400px','width':'700px','margin':'0 auto','color':'black'},
         virtualization=True,
-    )],)
+    )
         ])
 
 
