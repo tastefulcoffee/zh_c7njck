@@ -7,7 +7,7 @@ import pandas as pd
 
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 current_dir = os.path.dirname(os.path.abspath(__file__))
-emission_data = pd.read_csv(os.path.join(current_dir, '2_co2_kibocsajtas.csv'))
+emission_data = pd.read_csv(os.path.join(current_dir, '2_co2_kibocsajtas.csv'),index_col=0)
 
 app.layout = html.Div([
     html.H1('Első feladat'),
