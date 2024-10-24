@@ -1,9 +1,6 @@
-from pydoc import classname
-
 import dash
 import os
-
-from click import style
+from dash.exceptions import PreventUpdate
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
@@ -61,7 +58,9 @@ app.layout = html.Div([
     Input('netto_energiamerleg_dd', 'value')
 )
 def update_table(selected_country):
-    if not Country:
+    if not selected_country:
+        return []
+    if selected_country not in emission_data['Country'].values:
         raise PreventUpdate
     filtered_df = emission_data[emission_data['Country'] == selected_country]
     grouped_df = filtered_df.groupby('Year').agg({
