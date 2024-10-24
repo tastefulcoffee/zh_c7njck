@@ -1,5 +1,9 @@
+from pydoc import classname
+
 import dash
 import os
+
+from click import style
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
@@ -32,14 +36,37 @@ app.layout = html.Div([
         dbc.Tab([dcc.Markdown(markdown2)],label="Projekt adatai"),
         dbc.Tab([dcc.Markdown(markdown3)],label="ETL"),
     ]),
-    dcc.Dropdown(
-        id='netto_energiamerleg',
+    html.Div(className='dd-1',children=[dcc.Dropdown(
+        id='netto_energiamerleg_dd',
         placeholder='Válasszon egy országot',
-        options=[{'label': country,'value': country} for country in emission_data['Country'].unique()]
+        options=[{'label': country,'value': country} for country in emission_data['Country'].unique()],
+        className='dropdown-1',
+        style={'background-color':'#783758', 'color':'black'},
+        )],style={'width':'700px','margin':'0 auto'}),
 
-    )
-])
+    html.Div(className='dt-1',children=[dash_table.DataTable(
+        id='netto_energiamerleg_dt',
+        data=[],
+        columns=[{"name": "Year", "id": "Year"},{'name':'Net_energy_balance','id':'Net_energy_balance'}],
+        style_header={'whiteSpace': 'normal'},
+        fixed_rows={'headers': True},
+        style_table={'height': '400px','width':'700px','margin':'0 auto','color':'black'},
+        virtualization=True,
+    )],)
+        ])
 
+
+@app.callback(
+    Output('netto_energiamerleg_dt', 'data'),
+    Input('netto_energiamerleg_dd', 'value')
+)
+def update_table(selected_country):
+    if not Country:
+        raise PreventUpdate
+    filtered_df = emission_data[emission_data['Country'] == selected_country]
+    grouped_df = filtered_df.groupby('Year').agg({
+        'Net_energy_balance': 'sum'}).reset_index()
+    return grouped_df.to_dict('records')
 
 if __name__ == '__main__':
     app.run_server(debug=True)
