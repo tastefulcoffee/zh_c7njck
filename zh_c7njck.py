@@ -5,6 +5,7 @@ from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
 import pandas as pd
+import plotly.graph_objects as go
 
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.VAPOR, dbc.icons.FONT_AWESOME])
 
@@ -64,10 +65,21 @@ app.layout = html.Div([
         min=0,
         max=kum_fogy['Energy_consumption'].max(),
         step=50,
-        value=200,
+        value=kum_fogy['Energy_consumption'].max(),
         marks=None,
         tooltip={"placement": "bottom", "always_visible": True}),
-        html.Div(id='country-list')
+        html.Div(id='country-list'),
+    html.P(),
+    html.H2('5. Feladat: Többváltozós legördülő lista'),
+    html.Div(className='dd-2',children=[dcc.Dropdown(
+        id='multi_dd',
+        placeholder='Válasszon egy vagy több országot',
+        options=[{'label': country,'value': country} for country in emission_data['Country'].unique()],
+        className='dropdown-2',
+        multi=True,
+        style={'color':'black'},
+        )],style={'width':'700px','margin':'0 auto'}),
+    dcc.Graph(id='multi-energy-chart', figure=go.Figure())
         ])
 
 
@@ -88,13 +100,41 @@ def update_table(selected_country):
 
 @app.callback(
     Output('country-list', 'children'),
-    [Input('energy-slider', 'value')]
+    Input('energy-slider', 'value')
 )
 def update_country_list(min_consumption):
     filtered_countries = kum_fogy[kum_fogy['Energy_consumption'] >= min_consumption]
     if filtered_countries.empty:
         return html.P("Nincs olyan ország, amelynek a kumulált energiafogyasztása meghaladja az adott értéket.")
     return html.Ul([html.Li(country) for country in filtered_countries['Country']])
+
+@app.callback(
+    Output('multi-energy-chart', 'figure'),
+    Input('multi_dd', 'value'))
+
+def update_charts(selected_countries):
+    if not selected_countries:
+        empty_fig = go.Figure()
+        empty_fig.update_layout(title="Válassz országot a diagram megjelenítéséhez",template='plotly_dark')
+        return empty_fig
+    fig = go.Figure()
+    for country in selected_countries:
+        country_data = emission_data[emission_data['Country'] == country]
+        fig.add_trace(go.Scatter(
+            x=country_data['Year'],
+            y=country_data['Energy_consumption'],
+            mode='lines+markers',
+            name=country
+        ))
+
+    fig.update_layout(
+        title="Kiválasztott országok energiafogyasztása",
+
+        template='plotly_dark'
+    )
+
+    return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
