@@ -79,7 +79,21 @@ app.layout = html.Div([
         multi=True,
         style={'color':'black'},
         )],style={'width':'700px','margin':'0 auto'}),
-    dcc.Graph(id='multi-energy-chart', figure=go.Figure())
+    dcc.Graph(id='multi-energy-chart', figure=go.Figure()),
+    html.P(),
+    html.H2('6. Feladat: Évek szerinti CO2 kibocsájtás'),
+    dcc.Slider(
+        id='year-slider',
+        min=emission_data['Year'].unique().min(),
+        max=emission_data['Year'].unique().max(),
+        step=1,
+        marks={str(year): str(year) for year in emission_data['Year'].unique()},
+        value=emission_data['Year'].unique().min()),
+    html.Div([
+        html.Label("Osztályközök száma:"),
+        dcc.Input(id='bins-input', type='number', value=5, min=1, step=1)
+    ], style={'display': 'inline-block', 'padding-left': '20px'}),
+    dcc.Graph(id='co2-histogram')
         ])
 
 
@@ -135,6 +149,32 @@ def update_charts(selected_countries):
 
     return fig
 
+
+@app.callback(
+    Output('co2-histogram', 'figure'),
+    [Input('year-slider', 'value'), Input('bins-input', 'value')]
+)
+def update_histogram(selected_year, num_bins):
+    filtered_df = emission_data[emission_data['Year'] == selected_year]
+    grouped_df = filtered_df.groupby('Country', as_index=False).agg({'CO2_emission': 'mean'})
+
+    fig = go.Figure(
+        data=go.Histogram(
+            x=grouped_df['CO2_emission'],
+            nbinsx=num_bins
+        )
+    )
+
+    fig.update_layout(
+        title=f"CO₂ Kibocsátás {selected_year}-ban",
+        xaxis_title="CO₂ Kibocsátás",
+        yaxis_title="Országok száma",
+        paper_bgcolor="lightgrey",
+        plot_bgcolor="white",
+        yaxis = dict(automargin=True, autorange=True)
+    )
+
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
