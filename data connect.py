@@ -47,5 +47,6 @@ for column, outliers in outliers_dict.items():
     print(outliers)
 
 co2_merge['Net_energy_balance']=co2_merge['Energy_production']-co2_merge['Energy_consumption']
+co2_merge=co2_merge.drop_duplicates()
 
 co2_merge.to_csv("co2_merge.csv",header=True)
