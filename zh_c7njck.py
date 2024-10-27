@@ -33,10 +33,11 @@ markdown3= """
 + Üres értékek: Régiók alapján az átlaggal feltöltöttem
 + Kiugró értékek: Z-score alapján kiszűrtem őket
 """
-markdown3= """
-+ Tábla kapcsolat: Országokhoz régiókat rendeltem
-+ Üres értékek: Régiók alapján az átlaggal feltöltöttem
-+ Kiugró értékek: Z-score alapján kiszűrtem őket
+markdown4= """
++ Átfogó stílusnak választottam a "dbc.themes.VAPOR, dbc.icons.FONT_AWESOME"
++ Próbáltam a fehér, fekete és kék színeket alkalmazni
++ Lineáris regresszió esetén nem lehet polinomiális fokot állítani
++ Visszajelzést küldd a felhasználónak ha a polinomiális fokot 1 alattira szeretné állítani
 """
 app.layout = html.Div([
     html.P(),
@@ -159,7 +160,7 @@ app.layout = html.Div([
     html.P(),
     html.H2('9. Feladat: Formázások'),
     html.P(),
-
+    dcc.Markdown(markdown4)
         ])
 
 
@@ -230,7 +231,7 @@ def update_histogram(selected_year, num_bins):
         data=go.Histogram(
             x=grouped_df['CO2_emission'],
             nbinsx=num_bins,
-            marker=dict(color='white')
+            marker=dict(color='blue')
         )
     )
 
@@ -262,13 +263,17 @@ def update_map(selected_energy_type):
         hover_name="Country",
         animation_frame="Year",
         color_continuous_scale="Viridis",
+
         title=f"{selected_energy_type} Fogyasztás Évek Szerint"
     )
 
     fig.update_layout(
         geo=dict(showframe=False, showcoastlines=True),
         coloraxis_colorbar=dict(title="Fogyasztás"),
-        title_font=dict(size=20, color="black")
+        title_font=dict(size=35, color="white"),
+        paper_bgcolor='black',
+        plot_bgcolor='black',
+        font_color='white'
     )
 
     return fig
@@ -298,9 +303,10 @@ def validate_polynomial_degree(poly_degree, regression_type):
 )
 def update_graph(selected_country, regression_type, poly_degree):
 
-    fig = px.scatter(title='Válassz országot és regressziós típust a diagramhoz')
+    fig = px.scatter(title='Válassz országot és regressziós típust a diagramhoz',template='plotly_dark')
 
     if not selected_country or not regression_type:
+
         return fig
 
     filtered_df = aggr_kib[aggr_kib['Country'] == selected_country]
@@ -319,8 +325,8 @@ def update_graph(selected_country, regression_type, poly_degree):
         X_pred_poly = poly.transform(X_pred)
         y_pred = model.predict(X_pred_poly)
 
-        fig = px.scatter(filtered_df, x='Year', y='CO2_emission', title=f'{selected_country} CO2 kibocsátás (Polinomiális)')
-        fig.add_scatter(x=X_pred.flatten(), y=y_pred, mode='lines', name='Regresszió', line=dict(color='red'))
+        fig = px.scatter(filtered_df, x='Year', y='CO2_emission', title=f'{selected_country} CO2 kibocsátás (Polinomiális)', template='plotly_dark')
+        fig.add_scatter(x=X_pred.flatten(), y=y_pred, mode='lines', name='Regresszió', line=dict(color='blue'))
 
     elif regression_type == 'linear':
 
@@ -330,7 +336,7 @@ def update_graph(selected_country, regression_type, poly_degree):
 
         y_pred = model.predict(X)
 
-        fig = px.scatter(filtered_df, x='Year', y='CO2_emission', title=f'{selected_country} CO2 kibocsátás (Lineáris)')
+        fig = px.scatter(filtered_df, x='Year', y='CO2_emission', title=f'{selected_country} CO2 kibocsátás (Lineáris)', template='plotly_dark')
         fig.add_scatter(x=X.flatten(), y=y_pred, mode='lines', name='Regresszió', line=dict(color='blue'))
 
     return fig
