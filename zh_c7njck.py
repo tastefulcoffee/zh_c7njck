@@ -4,6 +4,7 @@ from dash.exceptions import PreventUpdate
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Output, Input
+import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -82,18 +83,32 @@ app.layout = html.Div([
     dcc.Graph(id='multi-energy-chart', figure=go.Figure()),
     html.P(),
     html.H2('6. Feladat: Évek szerinti CO2 kibocsájtás'),
-    dcc.Slider(
+    html.P(),
+    dbc.Row([
+        dbc.Col(dcc.Slider(
         id='year-slider',
         min=emission_data['Year'].unique().min(),
         max=emission_data['Year'].unique().max(),
         step=1,
         marks={str(year): str(year) for year in emission_data['Year'].unique()},
-        value=emission_data['Year'].unique().min()),
-    html.Div([
+        value=emission_data['Year'].unique().min())),
+    dbc.Col(html.Div([
         html.Label("Osztályközök száma:"),
-        dcc.Input(id='bins-input', type='number', value=5, min=1, step=1)
-    ], style={'display': 'inline-block', 'padding-left': '20px'}),
-    dcc.Graph(id='co2-histogram')
+        dcc.Input(id='bins-input', type='number', value=10, min=1, step=5)
+    ], style={'display': 'inline-block', 'padding-left': '20px'}))]),
+    html.P(),
+    dcc.Graph(id='co2-histogram'),
+    html.P(),
+    html.H2('7. Feladat: Energia típusok tematikus térképen'),
+    html.P(),
+    dcc.Dropdown(
+        id='energy-type-dd',
+        options=[{'label': energy, 'value': energy} for energy in emission_data['Energy_type'].unique()],
+        value=emission_data['Energy_type'].unique()[0],
+        clearable=False
+    ),
+    dcc.Graph(id='choropleth-map', style={'height': '70vh'})
+
         ])
 
 
@@ -161,17 +176,47 @@ def update_histogram(selected_year, num_bins):
     fig = go.Figure(
         data=go.Histogram(
             x=grouped_df['CO2_emission'],
-            nbinsx=num_bins
+            nbinsx=num_bins,
+            marker=dict(color='#143e9e')
         )
     )
 
     fig.update_layout(
         title=f"CO₂ Kibocsátás {selected_year}-ban",
+        title_font=dict(size=45, color='#143e9e'),
         xaxis_title="CO₂ Kibocsátás",
         yaxis_title="Országok száma",
-        paper_bgcolor="lightgrey",
-        plot_bgcolor="white",
-        yaxis = dict(automargin=True, autorange=True)
+        paper_bgcolor="#a7beda",
+        plot_bgcolor="black",
+        xaxis=dict(title_font=dict(size=24,color='#143e9e'),tickfont=dict(color='#143e9e')),
+        yaxis = dict(automargin=True, autorange=True,title_font=dict(size=24,color='#143e9e'),tickfont=dict(color='#143e9e'))
+    )
+
+    return fig
+
+
+@app.callback(
+    Output('choropleth-map', 'figure'),
+    Input('energy-type-dd', 'value')
+)
+def update_map(selected_energy_type):
+    filtered_df = emission_data[emission_data['Energy_type'] == selected_energy_type]
+
+    fig = px.choropleth(
+        filtered_df,
+        locations="Country",
+        locationmode="country names",
+        color="Energy_consumption",
+        hover_name="Country",
+        animation_frame="Year",
+        color_continuous_scale="Viridis",
+        title=f"{selected_energy_type} Fogyasztás Évek Szerint"
+    )
+
+    fig.update_layout(
+        geo=dict(showframe=False, showcoastlines=True),
+        coloraxis_colorbar=dict(title="Fogyasztás"),
+        title_font=dict(size=20, color="black")
     )
 
     return fig
