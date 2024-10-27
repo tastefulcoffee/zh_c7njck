@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 df1 = pd.read_csv(os.path.join(current_dir, '2_co2_kibocsajtas.csv'),index_col=0)
@@ -42,11 +43,19 @@ for column in columns_to_check:
 
     co2_merge.loc[outliers, column] = mean
 
-for column, outliers in outliers_dict.items():
-    print(f"Kiugrók az {column} oszlopban:")
-    print(outliers)
+#for column, outliers in outliers_dict.items():
+ #   print(f"Kiugrók az {column} oszlopban:")
+  #  print(outliers)
 
 co2_merge['Net_energy_balance']=co2_merge['Energy_production']-co2_merge['Energy_consumption']
 co2_merge=co2_merge.drop_duplicates()
 
-co2_merge.to_csv("co2_merge.csv",header=True)
+numeric_l = co2_merge.select_dtypes(include=['float64', 'int64']).columns.tolist()
+numeric_l.remove('Year')
+#print(numeric_l)
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(co2_merge[numeric_l])
+numeric_df = pd.DataFrame(scaled_data, columns=numeric_l)
+co2_merge_scaled = pd.concat([co2_merge.drop(columns=numeric_l), numeric_df], axis=1)
+
+co2_merge_scaled.to_csv("co2_merge_scaled.csv",header=True)
