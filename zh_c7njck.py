@@ -196,8 +196,8 @@ def update_country_list(min_consumption):
 
 
 @app.callback(
-    Output('multi-energy-chart', 'children'),  # A szülő konténer frissítése
-    Input('multi_dd', 'value')  # A dropdown bemenet
+    Output('multi-energy-chart', 'children'),
+    Input('multi_dd', 'value')  
 )
 def update_charts(selected_countries):
     if not selected_countries:
