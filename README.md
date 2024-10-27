@@ -12,6 +12,7 @@ Still, if you find anythin useful, use it.
 ### A **"regions.xlsx"** egy országokat és hozzátartozó régió megnevezésüket tartalmazó excel.
 #### Az excel az [alábbi](https://statisticstimes.com/geography/countries-by-continents.php) táblázatból készült.
 ### A **'co2_merge.csv'** a két tábla kapcsolása.
+#### (ennek skálázott verziója a **'co2_merge_scaled.csv'**)
 #### Ezt a kapcsolást és egyéb ETL műveleteket tartalmaz a **'data connect.py'**
 ### A fő kód: **'zh_c7njck.py'**
 ![Popcatgoeshard](https://64.media.tumblr.com/0216dd40e7a80ffe1f152f55314268cf/ddbe4728c2e3b226-24/s640x960/271df514e9e1b65c9d048337ae918adfd37d01f3.gif)
