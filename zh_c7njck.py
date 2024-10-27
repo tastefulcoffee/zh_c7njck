@@ -14,7 +14,7 @@ import numpy as np
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.VAPOR, dbc.icons.FONT_AWESOME])
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-emission_data = pd.read_csv(os.path.join(current_dir, 'co2_merge.csv'),index_col=0)
+emission_data = pd.read_csv(os.path.join(current_dir, 'co2_merge_scaled.csv'),index_col=0)
 kum_fogy = emission_data.groupby('Country')['Energy_consumption'].sum().reset_index()
 aggr_kib = emission_data.groupby(['Country', 'Year'], as_index=False)['CO2_emission'].sum()
 markdown_cim="# CO2 Kibocsájtás - Szabó Norbert "
@@ -24,14 +24,19 @@ C7NJCK
 justtaylorsemail@gmail.com  
 """
 markdown2= """
-Elemzés és formázás  
-Daily overdose on coffeine  
-2_co2_kibocsajtas.csv a fájlom  
++ Elemzés és formázás  
++ Daily overdose on caffeine  
++ 2_co2_kibocsajtas.csv a fájlom  
++ Ehhez kapcsoltam a regions.xlsx-t, ami országokhoz tartozó régió nevek miatt volt fontos
+
+*folytatás a következő lapon*
 """
 markdown3= """
 + Tábla kapcsolat: Országokhoz régiókat rendeltem
 + Üres értékek: Régiók alapján az átlaggal feltöltöttem
 + Kiugró értékek: Z-score alapján kiszűrtem őket
++ Standardscaler használatával skáláztam az outlier-ek kivonása az adathalmazt
++ A skálázatlan adathalmaz is elérhető, ezzel is megtekinthető az eredmény: 'co2_merge.csv'
 """
 markdown4= """
 + Átfogó stílusnak választottam a "dbc.themes.VAPOR, dbc.icons.FONT_AWESOME"
@@ -97,7 +102,7 @@ app.layout = html.Div([
         multi=True,
         style={'color':'blue','backgroundColor':'black'},
         )],style={'width':'700px','margin':'0 auto'}),
-    dcc.Graph(id='multi-energy-chart', figure=go.Figure()),
+    html.Div(id='multi-energy-chart'),
     html.P(),
     html.H2('6. Feladat: Évek szerinti CO2 kibocsájtás'),
     html.P(),
@@ -189,19 +194,21 @@ def update_country_list(min_consumption):
         return html.P("Nincs olyan ország, amelynek a kumulált energiafogyasztása meghaladja az adott értéket.")
     return html.Ul([html.Li(country) for country in filtered_countries['Country']])
 
-@app.callback(
-    Output('multi-energy-chart', 'figure'),
-    Input('multi_dd', 'value'))
 
+@app.callback(
+    Output('multi-energy-chart', 'children'),  # A szülő konténer frissítése
+    Input('multi_dd', 'value')  # A dropdown bemenet
+)
 def update_charts(selected_countries):
     if not selected_countries:
-        empty_fig = go.Figure()
-        empty_fig.update_layout(title="Válassz országot a diagram megjelenítéséhez",template='plotly_dark',title_font=dict(size=35, color='white'),
-        yaxis_title="Energiafogyasztás")
-        return empty_fig
-    fig = go.Figure()
+        return [html.Div("Válassz országot a diagram megjelenítéséhez", style={'color': 'white'})]
+
+    charts = []
+
     for country in selected_countries:
         country_data = emission_data[emission_data['Country'] == country]
+
+        fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=country_data['Year'],
             y=country_data['Energy_consumption'],
@@ -209,14 +216,16 @@ def update_charts(selected_countries):
             name=country
         ))
 
-    fig.update_layout(
-        title="Kiválasztott országok energiafogyasztása",
-        title_font=dict(size=45, color='white'),
-        yaxis_title="Energiafogyasztás",
-        template='plotly_dark'
-    )
+        fig.update_layout(
+            title=f"{country} energiafogyasztása",
+            title_font=dict(size=20, color='white'),
+            yaxis_title="Energiafogyasztás",
+            template='plotly_dark'
+        )
 
-    return fig
+        charts.append(dcc.Graph(figure=fig))
+
+    return charts
 
 
 @app.callback(
